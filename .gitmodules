@@ -1,0 +1,6 @@
+[submodule "verilog_arithmetic_module"]
+	path = verilog_arithmetic_module
+	url = ../verilog_arithmetic_module.git
+[submodule "VerilRocq"]
+	path = VerilRocq
+	url = ../VerilRocq.git
