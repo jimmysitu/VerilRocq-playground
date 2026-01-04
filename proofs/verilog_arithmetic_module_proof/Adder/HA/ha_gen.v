@@ -95,11 +95,9 @@ endmodule
   }.
 
   Record Flops := {
-    dummy_flop_v: unit
   }.
 
   Record Updates := {
-    dummy_update: unit
   }.
 
   Section Helpers.
@@ -107,7 +105,7 @@ endmodule
     Import ListNotations.
     Import HMapNotations.
 
-    #[export] Instance inputs_structured: StructuredState Inputs := {|
+    #[export] Instance inputs_structured: StructuredState Inputs := {
       from_state :=
         fun (state : State) =>
           src1_v <- sfind src1 state;
@@ -123,7 +121,7 @@ endmodule
           HMapStr [(src1, HMapBits src1_v);
                    (src2, HMapBits src2_v)]
         end
-    |}.
+    }.
 
     Definition output_to_state (o: Outputs): State :=
       HMapStr [(sum, HMapBits o.(sum_v));
@@ -132,15 +130,15 @@ endmodule
     Definition update_to_state (u: Updates): State :=
       HMapStr [].
 
-    #[export] Instance flops_structured: StructuredState Flops := {|
+    #[export] Instance flops_structured: StructuredState Flops := {
       from_state :=
         fun (state : State) =>
-          Sret {| dummy_flop_v := tt |};
+          Sret Build_Flops;
       to_state := fun f =>
         match f with
         | _ => HMapStr []
         end
-    |}.
+    }.
 
     Definition etrs (eid: vid): trsOk MTrs :=
     match eid with

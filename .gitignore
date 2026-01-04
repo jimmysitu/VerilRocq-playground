@@ -3,6 +3,8 @@
 *.vok
 *.vos
 *.glob
+*.Makefile.coq.d
+.*.aux
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

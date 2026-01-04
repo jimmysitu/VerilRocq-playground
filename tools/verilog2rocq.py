@@ -197,9 +197,7 @@ class RocqGenerator:
         # Inputs Record
         lines.append("  Record Inputs := {")
         inputs_list = [inp[0] for inp in self.data.inputs]
-        if not inputs_list:
-             lines.append("    dummy_input_v: unit")
-        else:
+        if inputs_list:
             for i, name in enumerate(inputs_list):
                 sep = ";" if i < len(inputs_list) - 1 else ""
                 lines.append(f"    {name}_v: SZ{sep}")
@@ -209,9 +207,7 @@ class RocqGenerator:
         # Outputs Record
         lines.append("  Record Outputs := {")
         outputs_list = [out[0] for out in self.data.outputs]
-        if not outputs_list:
-             lines.append("    dummy_output_v: unit")
-        else:
+        if outputs_list:
             for i, name in enumerate(outputs_list):
                 sep = ";" if i < len(outputs_list) - 1 else ""
                 lines.append(f"    {name}_v: SZ{sep}")
@@ -234,9 +230,7 @@ class RocqGenerator:
             mod_type_cap = mod_type.capitalize()
             flop_fields.append(f"{inst_name}_v: {mod_type_cap}.Flops")
             
-        if not flop_fields:
-             lines.append("    dummy_flop_v: unit")
-        else:
+        if flop_fields:
             for i, field in enumerate(flop_fields):
                 sep = ";" if i < len(flop_fields) - 1 else ""
                 lines.append(f"    {field}{sep}")
@@ -258,9 +252,7 @@ class RocqGenerator:
             mod_type_cap = mod_type.capitalize()
             update_fields.append(f"{inst_name}_update: {mod_type_cap}.Updates")
             
-        if not update_fields:
-            lines.append("    dummy_update: unit")
-        else:
+        if update_fields:
             for i, field in enumerate(update_fields):
                 sep = ";" if i < len(update_fields) - 1 else ""
                 lines.append(f"    {field}{sep}")
@@ -276,13 +268,13 @@ class RocqGenerator:
         lines.append("")
         
         # Inputs Structured
-        lines.append("    #[export] Instance inputs_structured: StructuredState Inputs := {|")
+        lines.append("    #[export] Instance inputs_structured: StructuredState Inputs := {")
         lines.append("      from_state :=")
         lines.append("        fun (state : State) =>")
         
         inputs_list = [inp[0] for inp in self.data.inputs]
         if not inputs_list:
-            lines.append("          Sret {| dummy_input_v := tt |};")
+            lines.append("          Sret Build_Inputs;")
         else:
             for name in inputs_list:
                 lines.append(f"          {name}_v <- sfind {name} state;")
@@ -301,7 +293,7 @@ class RocqGenerator:
             pairs = (";\n" + "                   ").join([f"({n}, HMapBits {n}_v)" for n in inputs_list])
             lines.append(f"          HMapStr [{pairs}]")
         lines.append("        end")
-        lines.append("    |}.")
+        lines.append("    }.")
         lines.append("")
         
         # Outputs to State
@@ -336,7 +328,7 @@ class RocqGenerator:
         lines.append("")
 
         # Flops Structured
-        lines.append("    #[export] Instance flops_structured: StructuredState Flops := {|")
+        lines.append("    #[export] Instance flops_structured: StructuredState Flops := {")
         lines.append("      from_state :=")
         lines.append("        fun (state : State) =>")
         
@@ -347,7 +339,7 @@ class RocqGenerator:
         all_flop_fields = reg_flops + inst_names
         
         if not all_flop_fields:
-            lines.append("          Sret {| dummy_flop_v := tt |};")
+            lines.append("          Sret Build_Flops;")
         else:
             for name in reg_flops:
                 lines.append(f"          {name}_v <- sfind {name} state;")
@@ -382,7 +374,7 @@ class RocqGenerator:
             
             lines.append("          HMapStr [" + (";\n                   ").join(pairs) + "]")
         lines.append("        end")
-        lines.append("    |}.")
+        lines.append("    }.")
         lines.append("")
         
         # ETrs
