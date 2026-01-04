@@ -1,0 +1,10 @@
+# Coq Project file for the VerilRocq-playground
+
+# VerilRocq dependencies
+-R VerilRocq/src Pfv
+-R VerilRocq/dep/coqutil/src/coqutil coqutil
+
+# Verilog Arithmetic Module Proof dependencies
+-R proofs/common common
+-R proofs/verilog_arithmetic_module_proof Verification.VerilogArithmeticModule
+
