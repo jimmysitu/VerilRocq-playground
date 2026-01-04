@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "**/modules/**/*.v": "verilog",
+        "**/proofs/**/*.v": "rocq",
+        "**/VerilRocq/**/*.v": "rocq"
+    }
+}

@@ -1,3 +1,9 @@
+# Rocq compiled files
+*.vo
+*.vok
+*.vos
+*.glob
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

@@ -1,0 +1,8 @@
+-R ../../VerilRocq/src Pfv
+-R ../../VerilRocq/dep/coqutil/src/coqutil/ coqutil
+-R ../common common
+-R . Verification.VerilogArithmeticModule
+
+../common/Common.v
+Adder/HA/ha_gen.v
+Adder/HA/ha_proof.v
