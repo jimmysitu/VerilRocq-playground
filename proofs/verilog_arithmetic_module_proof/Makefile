@@ -1,7 +1,15 @@
 COQPROJECT?=_CoqProject
 
+all: Makefile.coq
+	$(MAKE) -f Makefile.coq
+
+Makefile.coq: $(COQPROJECT)
+	coq_makefile -docroot . -f $(COQPROJECT) -o Makefile.coq
+
+
 SV2ROCQ_TOOL=../../tools/verilog2rocq.py --prefix Verification.VerilogArithmeticModule
 MODULES_DIR=../../modules/verilog_arithmetic_module
+
 
 verilog2rocq:
 	# Half Adder
@@ -24,12 +32,6 @@ verilog2rocq:
 #	$(SV2ROCQ_TOOL) $(MODULES_DIR)/Adder/03_CLA/src/rtl/cla_16.v Adder/CLA/cla_16_gen.v
 #	$(SV2ROCQ_TOOL) $(MODULES_DIR)/Adder/03_CLA/src/rtl/cla_32.v Adder/CLA/cla_32_gen.v
 
-
-all: Makefile.coq
-	$(MAKE) -f Makefile.coq
-
-Makefile.coq: $(COQPROJECT)
-	coq_makefile -docroot . -f $(COQPROJECT) -o Makefile.coq
 
 clean:
 	if [ -f Makefile.coq ]; then $(MAKE) -f Makefile.coq clean; fi

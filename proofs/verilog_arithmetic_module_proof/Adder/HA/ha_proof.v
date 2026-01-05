@@ -53,3 +53,96 @@ Section AbsOps.
   #[global] Opaque trs_structured.
 
 End AbsOps.
+
+Module HaSpec.
+  Import Ha.
+  Import SZNotations. (* Import bitvector notations, such as .^, etc. *)
+
+  (* 1. Define the correctness property (Specification) of the half-adder
+     Here, we use bit-level logic:
+     - sum should be the XOR of src1 and src2
+     - carry should be the AND of src1 and src2
+     
+     Note: VerilRocq's library (Pfv.Lib.Lib) typically provides szBXor (for ^) and szBAnd (for &) 
+     or similar bitwise operators. We assume these standard operators are present.
+     According to the Verilog code in ha_gen.v:
+     assign sum = src1 ^ src2;
+     assign carry = src1 & src2;
+  *)
+  Definition ha_spec_prop (i: Inputs) (o: Outputs) : Prop :=
+    o.(sum_v) = sz_b_xor i.(src1_v) i.(src2_v) /\
+    o.(carry_v) = sz_b_and i.(src1_v) i.(src2_v).
+
+  (* To unfold trs_structured in the proof,
+     we need to make it transparent, or explicitly unfold it in the proof script. *)
+  #[local] Transparent trs_structured.
+
+  (* 2. Correctness theorem 
+     Theorem statement: For any input i and any state f (the half-adder is stateless, so f is empty),
+     if we take one transition (trs_structured) at this state,
+     the output o must satisfy the property defined by ha_spec_prop.
+  *)
+  Theorem ha_correct : forall (i: Inputs) (f: Flops),
+    let (u, o) := trs_structured i f in
+    ha_spec_prop i o.
+  Proof.
+    intros i f.
+    (* Unfold the definition of the spec *)
+    unfold ha_spec_prop.
+    unfold trs_structured.
+
+    unfold trs_structured_sigT.
+    cbn.
+
+    (* Must destruct both i (Inputs) and f (Flops) *)
+    destruct i;
+    destruct f.
+
+    simpl.
+
+    split; reflexivity.
+  
+  Qed.
+
+  (* Half adder arithmetic Spec *)
+  Definition ha_arithmetic_spec (i: Inputs) (o: Outputs) : Prop :=
+    (* 使用 szNorm (szUnsigned ...) 将位向量转换为无符号整数 Z *)
+    let a := szNorm (szUnsigned i.(src1_v)) in
+    let b := szNorm (szUnsigned i.(src2_v)) in
+    let s := szNorm (szUnsigned o.(sum_v)) in
+    let c := szNorm (szUnsigned o.(carry_v)) in
+    (* 这里的 + 和 * 均是在 Z 上的运算 *)
+    (a + b)%Z = (s + 2 * c)%Z.
+  
+  Theorem ha_arithmetic_correct : forall (i: Inputs) (f: Flops),
+    ha_arithmetic_spec i (snd (trs_structured i f)).
+  Proof.
+    intros i f.
+
+    (* 1. Use the previously proven logical Spec (ha_correct) *)
+    (* ha_correct tells us that the output sum equals XOR, and carry equals AND *)
+    pose proof (ha_correct i f) as H_logic.
+
+    (* 2. Unfold the definition, preparing for substitution *)
+    unfold ha_arithmetic_spec.
+
+    (* The trick here is to destruct the return value of trs_structured
+       so that sum_v and carry_v in the Goal are exposed *)
+    destruct (trs_structured i f) as [u o].
+    unfold ha_spec_prop in H_logic. (* Obtains o.sum_v = ... /\ o.carry_v = ... *)
+    destruct H_logic as [Hsum Hcarry].
+  
+    unfold snd.
+    (* 3. Substitute the output variables of Spec with input expressions *)
+    rewrite Hsum, Hcarry.
+  
+    (* 4. Fully unfold to the underlying integer Z *)
+    unfold sz_b_xor, sz_b_and.
+    unfold szNorm, szUnsigned, szBXor, szBAnd.
+    unfold szNormZ.
+    
+    simpl. 
+
+    rewrite <- Zbitwise.Z.add_lxor_2land.
+  
+End HaSpec.
