@@ -4,10 +4,11 @@ Require Import Pfv.Lib.Lib. Import SZNotations. Import HMapNotations.
 Require Import Pfv.Lang.Lang.
 Require Import common.Common.
 
-Module Ha.
+Module Fa.
   Inductive vid : Type :=
-  | carry
-  | ha
+  | carry_in
+  | carry_out
+  | fa
   | src1
   | src2
   | sum
@@ -25,24 +26,33 @@ Module Ha.
 
   Module M.
 
-    Notation "'carry'" := carry (in custom ce_top).
-    Notation "'carry'" := carry (in custom ce_expr).
-    Notation "'carry'" := carry (in custom ce_stmt).
-    Notation "'carry'" := carry (in custom ce_assign).
-    Notation "'carry'" := carry (in custom ce_netdeclassign).
-    Notation "'carry'" := carry (in custom ce_vardeclassign).
-    Notation "'carry'" := carry (in custom ce_paramassign).
-    Notation "'.carry'" := carry (in custom ce_portconnid).
-    Notation "'carry'" := carry (in custom ce_ports).
-    Notation "'ha'" := ha (in custom ce_top).
-    Notation "'ha'" := ha (in custom ce_expr).
-    Notation "'ha'" := ha (in custom ce_stmt).
-    Notation "'ha'" := ha (in custom ce_assign).
-    Notation "'ha'" := ha (in custom ce_netdeclassign).
-    Notation "'ha'" := ha (in custom ce_vardeclassign).
-    Notation "'ha'" := ha (in custom ce_paramassign).
-    Notation "'.ha'" := ha (in custom ce_portconnid).
-    Notation "'ha'" := ha (in custom ce_ports).
+    Notation "'carry_in'" := carry_in (in custom ce_top).
+    Notation "'carry_in'" := carry_in (in custom ce_expr).
+    Notation "'carry_in'" := carry_in (in custom ce_stmt).
+    Notation "'carry_in'" := carry_in (in custom ce_assign).
+    Notation "'carry_in'" := carry_in (in custom ce_netdeclassign).
+    Notation "'carry_in'" := carry_in (in custom ce_vardeclassign).
+    Notation "'carry_in'" := carry_in (in custom ce_paramassign).
+    Notation "'.carry_in'" := carry_in (in custom ce_portconnid).
+    Notation "'carry_in'" := carry_in (in custom ce_ports).
+    Notation "'carry_out'" := carry_out (in custom ce_top).
+    Notation "'carry_out'" := carry_out (in custom ce_expr).
+    Notation "'carry_out'" := carry_out (in custom ce_stmt).
+    Notation "'carry_out'" := carry_out (in custom ce_assign).
+    Notation "'carry_out'" := carry_out (in custom ce_netdeclassign).
+    Notation "'carry_out'" := carry_out (in custom ce_vardeclassign).
+    Notation "'carry_out'" := carry_out (in custom ce_paramassign).
+    Notation "'.carry_out'" := carry_out (in custom ce_portconnid).
+    Notation "'carry_out'" := carry_out (in custom ce_ports).
+    Notation "'fa'" := fa (in custom ce_top).
+    Notation "'fa'" := fa (in custom ce_expr).
+    Notation "'fa'" := fa (in custom ce_stmt).
+    Notation "'fa'" := fa (in custom ce_assign).
+    Notation "'fa'" := fa (in custom ce_netdeclassign).
+    Notation "'fa'" := fa (in custom ce_vardeclassign).
+    Notation "'fa'" := fa (in custom ce_paramassign).
+    Notation "'.fa'" := fa (in custom ce_portconnid).
+    Notation "'fa'" := fa (in custom ce_ports).
     Notation "'src1'" := src1 (in custom ce_top).
     Notation "'src1'" := src1 (in custom ce_expr).
     Notation "'src1'" := src1 (in custom ce_stmt).
@@ -72,26 +82,29 @@ Module Ha.
     Notation "'sum'" := sum (in custom ce_ports).
 
     Definition m: @VModuleDecl vid := #[
-module ha(
+module fa(
     input src1,
     input src2,
+    input carry_in,
     output sum,
-    output carry
+    output carry_out
 );
-    assign sum = src1 ^ src2;
-    assign carry = src1 & src2;
+
+    assign sum = src1 ^ src2 ^ carry_in;
+    assign carry_out = (src1 & src2) | (src2 & carry_in) | (carry_in & src1);
 endmodule
     ].
   End M.
 
   Record Inputs := {
     src1_v: SZ;
-    src2_v: SZ
+    src2_v: SZ;
+    carry_in_v: SZ
   }.
 
   Record Outputs := {
     sum_v: SZ;
-    carry_v: SZ
+    carry_out_v: SZ
   }.
 
   Record Flops := {
@@ -110,22 +123,26 @@ endmodule
         fun (state : State) =>
           src1_v <- sfind src1 state;
           src2_v <- sfind src2 state;
+          carry_in_v <- sfind carry_in state;
           Sret {|
             src1_v := hbits src1_v;
             src2_v := hbits src2_v;
+            carry_in_v := hbits carry_in_v;
           |};
       to_state := fun i =>
         match i with
         | {| src1_v := src1_v;
-             src2_v := src2_v |} =>
+             src2_v := src2_v;
+             carry_in_v := carry_in_v |} =>
           HMapStr [(src1, HMapBits src1_v);
-                   (src2, HMapBits src2_v)]
+                   (src2, HMapBits src2_v);
+                   (carry_in, HMapBits carry_in_v)]
         end
     }.
 
     Definition output_to_state (o: Outputs): State :=
       HMapStr [(sum, HMapBits o.(sum_v));
-               (carry, HMapBits o.(carry_v))].
+               (carry_out, HMapBits o.(carry_out_v))].
 
     Definition update_to_state (u: Updates): State :=
       HMapEmpty.
@@ -144,4 +161,4 @@ endmodule
 
   End Helpers.
 
-End Ha.
+End Fa.

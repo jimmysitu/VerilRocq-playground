@@ -283,16 +283,16 @@ class RocqGenerator:
                 lines.append(f"            {name}_v := hbits {name}_v;")
             lines.append("          |};")
             
-        lines.append("      to_state := fun i =>")
-        lines.append("        match i with")
         if not inputs_list:
-             lines.append("        | _ => HMapStr []")
+            lines.append("      to_state := fun _ => HMapEmpty")
         else:
+            lines.append("      to_state := fun i =>")
+            lines.append("        match i with")
             fields_pat = (";\n" + "             ").join([f"{n}_v := {n}_v" for n in inputs_list])
             lines.append(f"        | {{| {fields_pat} |}} =>")
             pairs = (";\n" + "                   ").join([f"({n}, HMapBits {n}_v)" for n in inputs_list])
             lines.append(f"          HMapStr [{pairs}]")
-        lines.append("        end")
+            lines.append("        end")
         lines.append("    }.")
         lines.append("")
         
@@ -300,7 +300,7 @@ class RocqGenerator:
         lines.append("    Definition output_to_state (o: Outputs): State :=")
         outputs_list = [out[0] for out in self.data.outputs]
         if not outputs_list:
-            lines.append("      HMapStr [].")
+            lines.append("      HMapEmpty.")
         else:
             pairs = (";\n" + "               ").join([f"({n}, HMapBits o.({n}_v))" for n in outputs_list])
             lines.append(f"      HMapStr [{pairs}].")
@@ -314,7 +314,7 @@ class RocqGenerator:
         reg_flops = [f for f in sorted_flops if f not in inst_names]
         
         if not (reg_flops or self.data.instances):
-            lines.append("      HMapStr [].")
+            lines.append("      HMapEmpty.")
         else:
             pairs = []
             for n in reg_flops:
@@ -358,11 +358,11 @@ class RocqGenerator:
                 lines.append(f"            {inst_name}_v := {inst_name}_v{sep}")
             lines.append("          |};")
             
-        lines.append("      to_state := fun f =>")
-        lines.append("        match f with")
         if not all_flop_fields:
-            lines.append("        | _ => HMapStr []")
+            lines.append("      to_state := fun _ => HMapEmpty")
         else:
+            lines.append("      to_state := fun f =>")
+            lines.append("        match f with")
             pats = []
             for n in reg_flops: pats.append(f"{n}_v := {n}_v")
             for _, n in self.data.instances: pats.append(f"{n}_v := {n}_v")
@@ -373,7 +373,7 @@ class RocqGenerator:
             for _, n in self.data.instances: pairs.append(f"({n}, to_state {n}_v)")
             
             lines.append("          HMapStr [" + (";\n                   ").join(pairs) + "]")
-        lines.append("        end")
+            lines.append("        end")
         lines.append("    }.")
         lines.append("")
         
