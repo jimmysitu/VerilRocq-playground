@@ -1,3 +1,4 @@
+Require Import Coq.micromega.Lia.
 Require Import Coq.ZArith.BinInt.
 Require Import Coq.Lists.List. Import ListNotations.
 Require Import Pfv.Lib.Lib. Import SZNotations.
@@ -55,6 +56,7 @@ Section AbsOps.
 End AbsOps.
 
 Module HaSpec.
+
   Import Ha.
   Import SZNotations. (* Import bitvector notations, such as .^, etc. *)
 
@@ -106,12 +108,20 @@ Module HaSpec.
 
   (* Half adder arithmetic Spec *)
   Definition ha_arithmetic_spec (i: Inputs) (o: Outputs) : Prop :=
-    (* 使用 szNorm (szUnsigned ...) 将位向量转换为无符号整数 Z *)
+    (* For 1-bit inputs *)
+    (i.(src1_v).(szof) = 1 /\ i.(src2_v).(szof) = 1 ) ->
+    
+    (* Accessing szof field to check if the width is 1 *)
+    o.(sum_v).(szof)  = 1 /\
+    o.(carry_v).(szof) = 1 /\
+    
+    (* Use szNorm (szUnsigned ...) to convert bitvectors to unsigned integers (Z) *)
     let a := szNorm (szUnsigned i.(src1_v)) in
     let b := szNorm (szUnsigned i.(src2_v)) in
     let s := szNorm (szUnsigned o.(sum_v)) in
     let c := szNorm (szUnsigned o.(carry_v)) in
-    (* 这里的 + 和 * 均是在 Z 上的运算 *)
+ 
+    (* Here, + and * are arithmetic operations on Z *)
     (a + b)%Z = (s + 2 * c)%Z.
   
   Theorem ha_arithmetic_correct : forall (i: Inputs) (f: Flops),
@@ -126,23 +136,68 @@ Module HaSpec.
     (* 2. Unfold the definition, preparing for substitution *)
     unfold ha_arithmetic_spec.
 
+    (* 3. The key step: now we need to introduce the hypothesis that the inputs are valid *)
+    intros H_inputs_valid.
+    destruct H_inputs_valid as [H_src1_wd H_src2_wd]. 
+    (* Now we have the hypotheses:
+      H_src1_wd: i.(src1_v).(szof) = 1 
+      H_src2_wd: i.(src2_v).(szof) = 1 
+    *)
+
     (* The trick here is to destruct the return value of trs_structured
        so that sum_v and carry_v in the Goal are exposed *)
     destruct (trs_structured i f) as [u o].
-    unfold ha_spec_prop in H_logic. (* Obtains o.sum_v = ... /\ o.carry_v = ... *)
+    unfold ha_spec_prop in H_logic. (* This yields o.sum_v = ... /\ o.carry_v = ... *)
     destruct H_logic as [Hsum Hcarry].
   
     unfold snd.
     (* 3. Substitute the output variables of Spec with input expressions *)
     rewrite Hsum, Hcarry.
-  
-    (* 4. Fully unfold to the underlying integer Z *)
-    unfold sz_b_xor, sz_b_and.
-    unfold szNorm, szUnsigned, szBXor, szBAnd.
-    unfold szNormZ.
-    
-    simpl. 
+ 
+    split.
+    { (* Prove that the width of sum is 1 *)
+      (* sum_v = sz_b_xor i.(src1_v) i.(src2_v).
+         The width of sz_b_xor is max(i.(src1_v).szof, i.(src2_v).szof). *)
+      unfold sz_b_xor.
+      simpl.
+      rewrite H_src1_wd, H_src2_wd.
+      simpl Z.max.
+      reflexivity.
+    }
 
-    rewrite <- Zbitwise.Z.add_lxor_2land.
+    split.
+    { (* Prove that the width of carry is 1 *)
+      (* carry_v = sz_b_and i.(src1_v) i.(src2_v);
+         The width of sz_b_and is max(i.(src1_v).szof, i.(src2_v).szof). *)
+      unfold sz_b_and.
+      simpl.
+      rewrite H_src1_wd, H_src2_wd.
+      simpl Z.max.
+      reflexivity.
+    }
+    
+    (* Prove the arithmetic equality *)
+    unfold sz_b_xor, sz_b_and.
+    unfold szUnsigned, szNorm, szNormZ, szNormS.
+    rewrite H_src1_wd, H_src2_wd.
+    simpl Z.pow; simpl Z.max.
+
+    (* Abstract the values of the input bits *)
+    remember (zof i.(src1_v) mod 2) as bit1.
+    remember (zof i.(src2_v) mod 2) as bit2.
+
+    assert (Hbit1: bit1 = 0 \/ bit1 = 1).
+    { rewrite Heqbit1. 
+      pose proof (Z.mod_pos_bound (zof i.(src1_v)) 2).
+      lia. }
+    assert (Hbit2: bit2 = 0 \/ bit2 = 1).
+    { rewrite Heqbit2. 
+      pose proof (Z.mod_pos_bound (zof i.(src2_v)) 2).
+      lia. }
+
+    destruct (snof i.(src1_v)); destruct (snof i.(src2_v));
+    destruct Hbit1 as [-> | ->]; destruct Hbit2 as [-> | ->];
+    vm_compute; reflexivity.
+  Qed.
   
 End HaSpec.
