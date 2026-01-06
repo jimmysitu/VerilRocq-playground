@@ -177,8 +177,9 @@ Module HaSpec.
     }
     
     (* Prove the arithmetic equality *)
-    unfold sz_b_xor, sz_b_and.
-    unfold szUnsigned, szNorm, szNormZ, szNormS.
+    unfold szUnsigned, szNorm.
+    simpl.
+    unfold szNorm.
     rewrite H_src1_wd, H_src2_wd.
     simpl Z.pow; simpl Z.max.
 
@@ -195,9 +196,10 @@ Module HaSpec.
       pose proof (Z.mod_pos_bound (zof i.(src2_v)) 2).
       lia. }
 
-    destruct (snof i.(src1_v)); destruct (snof i.(src2_v));
-    destruct Hbit1 as [-> | ->]; destruct Hbit2 as [-> | ->];
-    vm_compute; reflexivity.
+    unfold szNormZ.
+    destruct (snof i.(src1_v)); destruct (snof i.(src2_v)).
+    - destruct Hbit1 as [-> | ->]. destruct Hbit2 as [-> | ->].
+      * unfold szNormZ.
   Qed.
   
 End HaSpec.
