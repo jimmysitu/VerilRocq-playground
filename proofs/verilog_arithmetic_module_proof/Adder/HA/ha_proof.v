@@ -103,23 +103,23 @@ Module HaSpec.
     simpl.
 
     split; reflexivity.
-  
+
   Qed.
 
   (* Half adder arithmetic Spec *)
   Definition ha_arithmetic_spec (i: Inputs) (o: Outputs) : Prop :=
     forall (src1_b src2_b : bool),
-    (* 前提：输入信号 i.src1_v 等于 "由布尔值 src1_b 构造出的 1-bit 无符号数" *)
+    (* Premise: the input signal i.src1_v equals "the 1-bit unsigned number constructed from the Boolean value src1_b" *)
     i.(src1_v) = #{Z.b2z src1_b, 1, false} ->
     i.(src2_v) = #{Z.b2z src2_b, 1, false} ->
-  
-    (* 结论 *)
+
+    (* Conclusion *)
     (
-      (* 同样，可以用布尔值来描述输出，或者直接写位宽约束 *)
-      o.(sum_v).(szof) = 1 /\ 
+      (* Similarly, the output can be described by Boolean values, or we can directly write the bit width constraints *)
+      o.(sum_v).(szof) = 1 /\
       o.(carry_v).(szof) = 1 /\
       
-      (* 算术等式现在可以直接用 src1_b, src2_b 表达，非常干净 *)
+      (* The arithmetic equation can now be directly expressed in terms of src1_b and src2_b, which is very clean *)
       let a := Z.b2z src1_b in
       let b := Z.b2z src2_b in
       let s := szNorm (szUnsigned o.(sum_v)) in
