@@ -30,8 +30,8 @@ Module Rca_04.
   Coercion VPortIdsOneVId: vid >-> VPortIds.
 
   Definition vid_eq_dec: forall (v1 v2: vid), {v1 = v2} + {v1 <> v2} := ltac:(decide equality).
-  #[export] Instance vid_t_c_impl : vid_t_c := { vid_t := vid }.
-  #[export] Instance vid_ops_impl : vid_ops := { vid_eq_dec := vid_eq_dec }.
+  #[local] Instance vid_t_c_impl_rca_04: vid_t_c := { vid_t := vid }.
+  #[local] Instance vid_ops_impl: vid_ops := { vid_eq_dec := vid_eq_dec }.
 
 
   Module M.
@@ -271,7 +271,8 @@ endmodule
                (carry_out, HMapBits o.(carry_out_v))].
 
     Definition update_to_state (u: Updates): State :=
-      HMapStr [(fa_00, Fa.update_to_state u.(fa_00_update));
+      @HMapStr vid_t_c_impl
+              [(fa_00, Fa.update_to_state u.(fa_00_update));
                (fa_01, Fa.update_to_state u.(fa_01_update));
                (fa_02, Fa.update_to_state u.(fa_02_update));
                (fa_03, Fa.update_to_state u.(fa_03_update))].
