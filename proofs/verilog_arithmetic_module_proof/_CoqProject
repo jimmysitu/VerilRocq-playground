@@ -4,5 +4,22 @@
 -R . Verification.VerilogArithmeticModule
 
 ../common/Common.v
+
+# Half Adder
 Adder/HA/ha_gen.v
 Adder/HA/ha_proof.v
+
+# Full Adder
+Adder/FA/fa_gen.v
+Adder/FA/fa_proof.v
+
+# Ripple Carry Adder
+Adder/RCA/fa_gen.v
+Adder/RCA/rca_04_gen.v
+Adder/RCA/rca_04_proof.v
+Adder/RCA/rca_08_gen.v
+Adder/RCA/rca_08_proof.v
+Adder/RCA/rca_16_gen.v
+Adder/RCA/rca_16_proof.v
+Adder/RCA/rca_32_gen.v
+Adder/RCA/rca_32_proof.v
