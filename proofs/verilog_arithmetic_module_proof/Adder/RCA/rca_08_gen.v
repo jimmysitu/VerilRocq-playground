@@ -7,6 +7,9 @@ Require Import Verification.VerilogArithmeticModule.Adder.RCA.common_gen.
 
 Require Import Verification.VerilogArithmeticModule.Adder.RCA.rca_04_gen.
 
+#[local] Existing Instance Rca_04.inputs_structured.
+#[local] Existing Instance Rca_04.flops_structured.
+
 Module Rca_08.
   Module M.
 

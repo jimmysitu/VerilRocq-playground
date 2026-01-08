@@ -5,7 +5,8 @@ Require Import Pfv.Lib.Lib. Import SZNotations.
 Require Import Pfv.Lang.Lang.
 Require Import common.Common.
 
-Require Import Verification.VerilogArithmeticModule.Adder.FA.fa_gen.
+Require Import Verification.VerilogArithmeticModule.Adder.RCA.common_gen.
+Require Import Verification.VerilogArithmeticModule.Adder.RCA.fa_gen.
 
 Import Fa.
 Import HMapNotations.
@@ -18,6 +19,7 @@ Import SFMonadNotations.
 #[local] Existing Instance SZ_sz_ops.
 #[local] Existing Instance hmap_array_ops.
 
+Module FaTrs.
 Section AbsOps.
   Context `{sz_ops} `{array_ops hmap}.
 
@@ -54,6 +56,7 @@ Section AbsOps.
   #[global] Opaque trs_structured.
 
 End AbsOps.
+End FaTrs.
 
 Module FaSpec.
 
@@ -72,18 +75,18 @@ Module FaSpec.
         (sz_b_and i.(carry_in_v) i.(src1_v)).
 
   (* Make it avaliable for unfold *)
-  #[local] Transparent trs_structured.
+  #[local] Transparent FaTrs.trs_structured.
 
   (* 2. Correctness theorem *)
   Theorem fa_correct : forall (i: Inputs) (f: Flops),
-    let (u, o) := trs_structured i f in
+    let (u, o) := FaTrs.trs_structured i f in
     fa_spec_prop i o.
   Proof.
     intros i f.
     unfold fa_spec_prop.
-    unfold trs_structured.
+    unfold FaTrs.trs_structured.
 
-    unfold trs_structured_sigT.
+    unfold FaTrs.trs_structured_sigT.
     cbn.
 
     destruct i;
@@ -112,7 +115,7 @@ Module FaSpec.
     ).
 
   Theorem fa_arithmetic_correct : forall (i: Inputs) (f: Flops),
-    fa_arithmetic_spec i (snd (trs_structured i f)).
+    fa_arithmetic_spec i (snd (FaTrs.trs_structured i f)).
   Proof.
     intros i f.
 
@@ -123,7 +126,7 @@ Module FaSpec.
 
     intros src1_b src2_b carry_in_b H_src1 H_src2 H_cin.
 
-    destruct (trs_structured i f) as [u o].
+    destruct (FaTrs.trs_structured i f) as [u o].
     unfold fa_spec_prop in H_logic.
     destruct H_logic as [Hsum Hcarry].
 

@@ -6,6 +6,7 @@ Require Import common.Common.
 Require Import Verification.VerilogArithmeticModule.Adder.RCA.common_gen.
 
 Require Import Verification.VerilogArithmeticModule.Adder.RCA.fa_gen.
+Require Import Verification.VerilogArithmeticModule.Adder.RCA.fa_proof.
 
 #[local] Existing Instance Fa.inputs_structured.
 #[local] Existing Instance Fa.flops_structured.
@@ -285,10 +286,10 @@ endmodule
 
     Definition etrs (eid: vid): trsOk MTrs :=
     match eid with
-    | fa_00 => Sret (Fa.mtrs : MTrs)
-    | fa_01 => Sret (Fa.mtrs : MTrs)
-    | fa_02 => Sret (Fa.mtrs : MTrs)
-    | fa_03 => Sret (Fa.mtrs : MTrs)
+    | fa_00 => Sret (FaTrs.mtrs : MTrs)
+    | fa_01 => Sret (FaTrs.mtrs : MTrs)
+    | fa_02 => Sret (FaTrs.mtrs : MTrs)
+    | fa_03 => Sret (FaTrs.mtrs : MTrs)
     | _ => Fail TrsUndeclared
     end.
 
