@@ -17,13 +17,10 @@ verilog2rocq:
 	
 	# Full Adder
 	$(SV2ROCQ_TOOL) $(MODULES_DIR)/Adder/01_FA/src/rtl/fa.v Adder/FA/fa_gen.v
-	
+
+rca:	
 	# Ripple Carry Adder
-	$(SV2ROCQ_TOOL) $(MODULES_DIR)/Adder/02_RCA/src/rtl/fa.v Adder/RCA/fa_gen.v
-	$(SV2ROCQ_TOOL) $(MODULES_DIR)/Adder/02_RCA/src/rtl/rca_04.v Adder/RCA/rca_04_gen.v
-	$(SV2ROCQ_TOOL) $(MODULES_DIR)/Adder/02_RCA/src/rtl/rca_08.v Adder/RCA/rca_08_gen.v
-	$(SV2ROCQ_TOOL) $(MODULES_DIR)/Adder/02_RCA/src/rtl/rca_16.v Adder/RCA/rca_16_gen.v
-	$(SV2ROCQ_TOOL) $(MODULES_DIR)/Adder/02_RCA/src/rtl/rca_32.v Adder/RCA/rca_32_gen.v
+	$(SV2ROCQ_TOOL) $(MODULES_DIR)/Adder/02_RCA/src/rtl Adder/RCA
 	
 #	# Carry Look-Ahead Adder
 #	$(SV2ROCQ_TOOL) $(MODULES_DIR)/Adder/03_CLA/src/rtl/fa.v Adder/CLA/fa_gen.v

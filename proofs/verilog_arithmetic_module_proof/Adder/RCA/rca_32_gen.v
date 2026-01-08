@@ -3,33 +3,11 @@ Require Import Coq.Lists.List.
 Require Import Pfv.Lib.Lib. Import SZNotations. Import HMapNotations.
 Require Import Pfv.Lang.Lang.
 Require Import common.Common.
+Require Import Verification.VerilogArithmeticModule.Adder.RCA.common_gen.
 
 Require Import Verification.VerilogArithmeticModule.Adder.RCA.rca_16_gen.
 
 Module Rca_32.
-  Inductive vid : Type :=
-  | carry
-  | carry_out
-  | high_16bit
-  | low_16bit
-  | rca_16
-  | rca_32
-  | src1
-  | src2
-  | sub_flag
-  | sum
-  .
-  
-  Definition VExprIdVId := @VExprId vid.
-  Coercion VExprIdVId: vid >-> VExpr.
-  Definition VPortIdsOneVId := @VPortIdsOne vid.
-  Coercion VPortIdsOneVId: vid >-> VPortIds.
-
-  Definition vid_eq_dec: forall (v1 v2: vid), {v1 = v2} + {v1 <> v2} := ltac:(decide equality).
-  #[export] Instance vid_t_c_impl : vid_t_c := { vid_t := vid }.
-  #[export] Instance vid_ops_impl : vid_ops := { vid_eq_dec := vid_eq_dec }.
-
-
   Module M.
 
     Notation "'carry'" := carry (in custom ce_top).

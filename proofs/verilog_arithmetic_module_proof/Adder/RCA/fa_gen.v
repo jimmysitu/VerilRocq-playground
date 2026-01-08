@@ -3,27 +3,9 @@ Require Import Coq.Lists.List.
 Require Import Pfv.Lib.Lib. Import SZNotations. Import HMapNotations.
 Require Import Pfv.Lang.Lang.
 Require Import common.Common.
+Require Import Verification.VerilogArithmeticModule.Adder.RCA.common_gen.
 
 Module Fa.
-  Inductive vid : Type :=
-  | carry_in
-  | carry_out
-  | fa
-  | src1
-  | src2
-  | sum
-  .
-  
-  Definition VExprIdVId := @VExprId vid.
-  Coercion VExprIdVId: vid >-> VExpr.
-  Definition VPortIdsOneVId := @VPortIdsOne vid.
-  Coercion VPortIdsOneVId: vid >-> VPortIds.
-
-  Definition vid_eq_dec: forall (v1 v2: vid), {v1 = v2} + {v1 <> v2} := ltac:(decide equality).
-  #[local] Instance vid_t_c_impl : vid_t_c := { vid_t := vid }.
-  #[local] Instance vid_ops_impl : vid_ops := { vid_eq_dec := vid_eq_dec }.
-
-
   Module M.
 
     Notation "'carry_in'" := carry_in (in custom ce_top).

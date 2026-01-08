@@ -6,6 +6,47 @@ import re
 from pyverilog.vparser.parser import parse
 from pyverilog.vparser.ast import *
 
+COMMON_GEN_FILENAME = "common_gen.v"
+COMMON_GEN_PREAMBLE = """Require Import Coq.ZArith.BinInt.
+Require Import Coq.Lists.List.
+Require Import Pfv.Lib.Lib. Import SZNotations. Import HMapNotations.
+Require Import Pfv.Lang.Lang.
+Require Import common.Common.
+"""
+
+
+def path_to_module(path: str) -> str:
+    """Convert a filesystem path (optionally with .v suffix) into a Coq module path."""
+    if not path:
+        return ""
+    norm_path = os.path.normpath(path)
+    module_path, _ = os.path.splitext(norm_path)
+    module_path = module_path.lstrip("./")
+    module_path = module_path.lstrip(os.sep)
+    module_path = module_path.replace("\\", "/")
+    parts = [p for p in module_path.split("/") if p and p != "."]
+    return ".".join(parts)
+
+def parse_verilog_file(input_file):
+    input_file = os.path.abspath(input_file)
+    if not os.path.exists(input_file):
+        print(f"Error: File not found: {input_file}")
+        sys.exit(1)
+
+    with open(input_file, 'r') as f:
+        content = f.read()
+
+    try:
+        ast, directives = parse([input_file])
+    except Exception as e:
+        print(f"Error parsing Verilog file: {e}")
+        sys.exit(1)
+
+    collector = VerilogDataCollector()
+    collector.visit(ast)
+    return collector, content
+
+
 class VerilogDataCollector:
     def __init__(self):
         self.module_name = ""
@@ -71,13 +112,15 @@ class VerilogDataCollector:
             self._collect_lvalue(node.var)
 
 class RocqGenerator:
-    def __init__(self, data: VerilogDataCollector, verilog_content: str, output_path: str = None, logical_prefix: str = ""):
+    def __init__(self, data: VerilogDataCollector, verilog_content: str, output_path: str = None, logical_prefix: str = "", extra_imports=None, use_common_vid=False):
         self.data = data
         self.raw_verilog = self._sanitize_verilog(verilog_content)
         self.mod_name = data.module_name
         self.cap_mod_name = self.mod_name.capitalize() if self.mod_name else "Mod"
         self.output_path = output_path
         self.logical_prefix = logical_prefix
+        self.extra_imports = list(dict.fromkeys(extra_imports or []))
+        self.use_common_vid = use_common_vid
 
     def _get_logical_dir(self):
         if not self.output_path:
@@ -117,6 +160,9 @@ class RocqGenerator:
         lines.append("Require Import Pfv.Lib.Lib. Import SZNotations. Import HMapNotations.")
         lines.append("Require Import Pfv.Lang.Lang.")
         lines.append("Require Import common.Common.")
+        for extra in self.extra_imports:
+            if extra:
+                lines.append(f"Require Import {extra}.")
         
         # Add imports for sub-modules
         unique_mods = sorted(list(set(i[0] for i in self.data.instances)))
@@ -135,30 +181,27 @@ class RocqGenerator:
         
         lines.append(f"Module {self.cap_mod_name}.")
         
-        # VId Definition (OUTSIDE Module M)
         sorted_ids = sorted(list(self.data.identifiers))
-        
-        lines.append("  Inductive vid : Type :=")
-        if not sorted_ids:
-            lines.append("  | dummy_id")
-        else:
-            for ident in sorted_ids:
-                lines.append(f"  | {ident}")
-        lines.append("  .")
-        lines.append("  ")
-        
-        # Coercions and Instances (OUTSIDE Module M)
-        lines.append("  Definition VExprIdVId := @VExprId vid.")
-        lines.append("  Coercion VExprIdVId: vid >-> VExpr.")
-        lines.append("  Definition VPortIdsOneVId := @VPortIdsOne vid.")
-        lines.append("  Coercion VPortIdsOneVId: vid >-> VPortIds.")
-        lines.append("")
-        
-        lines.append("  Definition vid_eq_dec: forall (v1 v2: vid), {v1 = v2} + {v1 <> v2} := ltac:(decide equality).")
-        lines.append("  #[export] Instance vid_t_c_impl : vid_t_c := { vid_t := vid }.")
-        lines.append("  #[export] Instance vid_ops_impl : vid_ops := { vid_eq_dec := vid_eq_dec }.")
-        lines.append("")
-        lines.append("")
+
+        if not self.use_common_vid:
+            lines.append("  Inductive vid : Type :=")
+            if not sorted_ids:
+                lines.append("  | dummy_id")
+            else:
+                for ident in sorted_ids:
+                    lines.append(f"  | {ident}")
+            lines.append("  .")
+            lines.append("  ")
+            lines.append("  Definition VExprIdVId := @VExprId vid.")
+            lines.append("  Coercion VExprIdVId: vid >-> VExpr.")
+            lines.append("  Definition VPortIdsOneVId := @VPortIdsOne vid.")
+            lines.append("  Coercion VPortIdsOneVId: vid >-> VPortIds.")
+            lines.append("")
+            lines.append("  Definition vid_vid_eq_dec: forall (v1 v2: vid), {v1 = v2} + {v1 <> v2} := ltac:(decide equality).")
+            lines.append("  #[export] Instance vid_t_c_impl : vid_t_c := {| vid_t := vid |}.")
+            lines.append("  #[export] Instance vid_ops_impl : vid_ops := {| vid_eq_dec := vid_vid_eq_dec |}.")
+            lines.append("")
+            lines.append("")
         
         # Module M (for notations and module definition)
         lines.append("  Module M.")
@@ -389,46 +432,153 @@ class RocqGenerator:
         lines.append("  End Helpers.")
         lines.append("")
 
+
+def convert_file(input_file, output_write_path=None, logical_output_path=None, logical_prefix="", extra_imports=None, quiet=False, collector=None, content=None, use_common_vid=False):
+    input_file = os.path.abspath(input_file)
+
+    if collector is None or content is None:
+        collector, content = parse_verilog_file(input_file)
+
+    generator = RocqGenerator(
+        collector,
+        content,
+        logical_output_path or output_write_path,
+        logical_prefix,
+        extra_imports=extra_imports,
+        use_common_vid=use_common_vid,
+    )
+    rocq_code = generator.generate()
+
+    if output_write_path:
+        output_dir = os.path.dirname(output_write_path)
+        if output_dir and not os.path.exists(output_dir):
+            os.makedirs(output_dir, exist_ok=True)
+        with open(output_write_path, 'w') as f:
+            f.write(rocq_code)
+        if not quiet:
+            print(f"Generated {output_write_path}")
+    else:
+        print(rocq_code)
+
+
+def write_common_gen(output_dir_abs, vid_sources):
+    os.makedirs(output_dir_abs, exist_ok=True)
+    common_path = os.path.join(output_dir_abs, COMMON_GEN_FILENAME)
+    lines = []
+    lines.append(COMMON_GEN_PREAMBLE.strip())
+    lines.append("")
+    lines.append("Inductive vid : Type :=")
+    if not vid_sources:
+        lines.append("| dummy_id")
+    else:
+        sorted_ids = sorted(vid_sources.keys())
+        for ident in sorted_ids:
+            sources = ", ".join(sorted(vid_sources[ident]))
+            comment = f" (* from {sources} *)" if sources else ""
+            lines.append(f"| {ident}{comment}")
+    lines.append(".")
+    lines.append("")
+    lines.append("Definition VExprIdVId := @VExprId vid.")
+    lines.append("Coercion VExprIdVId: vid >-> VExpr.")
+    lines.append("Definition VPortIdsOneVId := @VPortIdsOne vid.")
+    lines.append("Coercion VPortIdsOneVId: vid >-> VPortIds.")
+    lines.append("")
+    lines.append("Definition vid_vid_eq_dec: forall (v1 v2: vid), {v1 = v2} + {v1 <> v2} := ltac:(decide equality).")
+    lines.append("#[export] Instance vid_t_c_impl : vid_t_c := {| vid_t := vid |}.")
+    lines.append("#[export] Instance vid_ops_impl : vid_ops := {| vid_eq_dec := vid_vid_eq_dec |}.")
+    lines.append("")
+    with open(common_path, 'w') as f:
+        f.write("\n".join(lines))
+    print(f"Wrote {common_path}")
+
+
+def convert_directory(input_dir, output_dir_arg, logical_prefix=""):
+    input_dir_abs = os.path.abspath(input_dir)
+    output_dir_abs = os.path.abspath(output_dir_arg)
+
+    if not os.path.isdir(input_dir_abs):
+        print(f"Error: Input directory not found: {input_dir_abs}")
+        sys.exit(1)
+
+    canonical_common_module = path_to_module(os.path.join(output_dir_arg, os.path.splitext(COMMON_GEN_FILENAME)[0]))
+    if logical_prefix:
+        canonical_common_module = f"{logical_prefix}.{canonical_common_module}" if canonical_common_module else logical_prefix
+    extra_imports = [canonical_common_module] if canonical_common_module else []
+
+    generated = 0
+    file_infos = []
+    vid_sources = {}
+    for root, dirs, files in os.walk(input_dir_abs):
+        dirs.sort()
+        files.sort()
+        for filename in files:
+            if not filename.lower().endswith(".v"):
+                continue
+            input_file = os.path.join(root, filename)
+            rel_path = os.path.relpath(input_file, input_dir_abs)
+            rel_path = rel_path.replace(os.sep, "/")
+            rel_no_ext, _ = os.path.splitext(rel_path)
+            logical_output = os.path.join(output_dir_arg, rel_no_ext + "_gen.v")
+            output_file = os.path.join(output_dir_abs, rel_no_ext + "_gen.v")
+            collector, content = parse_verilog_file(input_file)
+            file_infos.append({
+                "input_file": input_file,
+                "output_file": output_file,
+                "logical_output": logical_output,
+                "collector": collector,
+                "content": content,
+            })
+            for ident in collector.identifiers:
+                vid_sources.setdefault(ident, set()).add(rel_path)
+            generated += 1
+
+    if generated == 0:
+        write_common_gen(output_dir_abs, {})
+        print("Warning: No Verilog (.v) files were found for conversion.")
+        return
+
+    write_common_gen(output_dir_abs, vid_sources)
+
+    for info in file_infos:
+        convert_file(
+            info["input_file"],
+            info["output_file"],
+            logical_output_path=info["logical_output"],
+            logical_prefix=logical_prefix,
+            extra_imports=extra_imports,
+            quiet=True,
+            collector=info["collector"],
+            content=info["content"],
+            use_common_vid=True,
+        )
+        print(f"Generated {info['output_file']}")
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='Convert Verilog to Rocq')
-    parser.path = argparse.ArgumentParser(description='Convert Verilog to Rocq')
-    parser.add_argument('input_file', help='Input Verilog file')
-    parser.add_argument('output_file', nargs='?', help='Output Rocq file')
+    parser.add_argument('input_file', help='Input Verilog file or directory')
+    parser.add_argument('output_file', nargs='?', help='Output Rocq file or directory')
     parser.add_argument('--prefix', default='', help='Logical prefix for imports')
     
     args = parser.parse_args()
     
-    input_file = os.path.abspath(args.input_file)
-    
-    if not os.path.exists(input_file):
-        print(f"Error: File not found: {input_file}")
-        sys.exit(1)
-        
-    # Read original content to embed in Rocq
-    with open(input_file, 'r') as f:
-        content = f.read()
+    input_path = os.path.abspath(args.input_file)
+    is_dir = os.path.isdir(input_path)
 
-    try:
-        # Parse using pyverilog
-        ast, directives = parse([input_file])
-    except Exception as e:
-        print(f"Error parsing Verilog file: {e}")
-        sys.exit(1)
-        
-    collector = VerilogDataCollector()
-    collector.visit(ast)
-    
-    generator = RocqGenerator(collector, content, args.output_file, args.prefix)
-    rocq_code = generator.generate()
-    
-    if args.output_file:
-        output_file = args.output_file
-        output_dir = os.path.dirname(output_file)
-        if output_dir and not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-        with open(output_file, 'w') as f:
-            f.write(rocq_code)
-        print(f"Generated {output_file}")
+    if is_dir:
+        if not args.output_file:
+            print("Error: Output directory is required when input is a directory.")
+            sys.exit(1)
+        convert_directory(args.input_file, args.output_file, logical_prefix=args.prefix)
     else:
-        print(rocq_code)
+        output_write_path = None
+        logical_output_path = None
+        if args.output_file:
+            output_write_path = os.path.abspath(args.output_file)
+            logical_output_path = args.output_file
+        convert_file(
+            args.input_file,
+            output_write_path=output_write_path,
+            logical_output_path=logical_output_path,
+            logical_prefix=args.prefix,
+        )

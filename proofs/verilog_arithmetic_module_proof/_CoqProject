@@ -14,6 +14,7 @@ Adder/FA/fa_gen.v
 Adder/FA/fa_proof.v
 
 # Ripple Carry Adder
+Adder/RCA/common_gen.v
 Adder/RCA/fa_gen.v
 Adder/RCA/rca_04_gen.v
 #Adder/RCA/rca_04_proof.v
