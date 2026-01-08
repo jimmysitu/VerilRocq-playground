@@ -3,37 +3,11 @@ Require Import Coq.Lists.List.
 Require Import Pfv.Lib.Lib. Import SZNotations. Import HMapNotations.
 Require Import Pfv.Lang.Lang.
 Require Import common.Common.
+Require Import Verification.VerilogArithmeticModule.Adder.RCA.common_gen.
 
 Require Import Verification.VerilogArithmeticModule.Adder.RCA.fa_gen.
 
 Module Rca_04.
-  Inductive vid : Type :=
-  | carry
-  | carry_in
-  | carry_out
-  | fa
-  | fa_00
-  | fa_01
-  | fa_02
-  | fa_03
-  | rca_04
-  | src1
-  | src2
-  | src2_reg
-  | sub_flag
-  | sum
-  .
-  
-  Definition VExprIdVId := @VExprId vid.
-  Coercion VExprIdVId: vid >-> VExpr.
-  Definition VPortIdsOneVId := @VPortIdsOne vid.
-  Coercion VPortIdsOneVId: vid >-> VPortIds.
-
-  Definition vid_eq_dec: forall (v1 v2: vid), {v1 = v2} + {v1 <> v2} := ltac:(decide equality).
-  #[local] Instance vid_t_c_impl_rca_04: vid_t_c := { vid_t := vid }.
-  #[local] Instance vid_ops_impl: vid_ops := { vid_eq_dec := vid_eq_dec }.
-
-
   Module M.
 
     Notation "'carry'" := carry (in custom ce_top).
@@ -243,6 +217,8 @@ endmodule
     Context `{SZ_OPS: sz_ops} `{ARRAY_OPS: array_ops hmap}.
     Import ListNotations.
     Import HMapNotations.
+    Existing Instance Fa.flops_structured.
+    Existing Instance Fa.inputs_structured.
 
     #[export] Instance inputs_structured: StructuredState Inputs := {
       from_state :=
@@ -271,8 +247,7 @@ endmodule
                (carry_out, HMapBits o.(carry_out_v))].
 
     Definition update_to_state (u: Updates): State :=
-      @HMapStr vid_t_c_impl
-              [(fa_00, Fa.update_to_state u.(fa_00_update));
+      HMapStr [(fa_00, Fa.update_to_state u.(fa_00_update));
                (fa_01, Fa.update_to_state u.(fa_01_update));
                (fa_02, Fa.update_to_state u.(fa_02_update));
                (fa_03, Fa.update_to_state u.(fa_03_update))].
