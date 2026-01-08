@@ -7,6 +7,9 @@ Require Import Verification.VerilogArithmeticModule.Adder.RCA.common_gen.
 
 Require Import Verification.VerilogArithmeticModule.Adder.RCA.fa_gen.
 
+#[local] Existing Instance Fa.inputs_structured.
+#[local] Existing Instance Fa.flops_structured.
+
 Module Rca_04.
   Module M.
 
@@ -217,8 +220,6 @@ endmodule
     Context `{SZ_OPS: sz_ops} `{ARRAY_OPS: array_ops hmap}.
     Import ListNotations.
     Import HMapNotations.
-    Existing Instance Fa.flops_structured.
-    Existing Instance Fa.inputs_structured.
 
     #[export] Instance inputs_structured: StructuredState Inputs := {
       from_state :=

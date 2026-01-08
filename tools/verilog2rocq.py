@@ -116,7 +116,7 @@ class RocqGenerator:
         self.data = data
         self.raw_verilog = self._sanitize_verilog(verilog_content)
         self.mod_name = data.module_name
-        self.cap_mod_name = self.mod_name.capitalize() if self.mod_name else "Mod"
+        self.cap_mod_name = self._to_coq_module_name(self.mod_name)
         self.output_path = output_path
         self.logical_prefix = logical_prefix
         self.extra_imports = list(dict.fromkeys(extra_imports or []))
@@ -130,6 +130,11 @@ class RocqGenerator:
             return ""
         # Convert path/to/dir to path.to.dir
         return dirname.replace("/", ".").replace("\\", ".")
+
+    def _to_coq_module_name(self, name: str) -> str:
+        if not name:
+            return "Mod"
+        return name[0].upper() + name[1:]
 
     def _sanitize_verilog(self, content: str) -> str:
         # 1. Replace // comments with (* ... *)
@@ -178,6 +183,15 @@ class RocqGenerator:
                     lines.append(f"Require Import {import_path}.")
         
         lines.append("")
+
+        if unique_mods:
+            for mod in unique_mods:
+                if mod.lower() == self.mod_name.lower():
+                    continue
+                mod_type_cap = self._to_coq_module_name(mod)
+                lines.append(f"#[local] Existing Instance {mod_type_cap}.inputs_structured.")
+                lines.append(f"#[local] Existing Instance {mod_type_cap}.flops_structured.")
+            lines.append("")
         
         lines.append(f"Module {self.cap_mod_name}.")
         
@@ -270,7 +284,7 @@ class RocqGenerator:
                 flop_fields.append(f"{flop}_v: SZ")
         
         for mod_type, inst_name in self.data.instances:
-            mod_type_cap = mod_type.capitalize()
+            mod_type_cap = self._to_coq_module_name(mod_type)
             flop_fields.append(f"{inst_name}_v: {mod_type_cap}.Flops")
             
         if flop_fields:
@@ -292,7 +306,7 @@ class RocqGenerator:
             update_fields.append(f"{flop}_update: State")
             
         for mod_type, inst_name in self.data.instances:
-            mod_type_cap = mod_type.capitalize()
+            mod_type_cap = self._to_coq_module_name(mod_type)
             update_fields.append(f"{inst_name}_update: {mod_type_cap}.Updates")
             
         if update_fields:
@@ -363,7 +377,7 @@ class RocqGenerator:
             for n in reg_flops:
                 pairs.append(f"({n}, u.({n}_update))")
             for mod_type, n in self.data.instances:
-                mod_type_cap = mod_type.capitalize()
+                mod_type_cap = self._to_coq_module_name(mod_type)
                 pairs.append(f"({n}, {mod_type_cap}.update_to_state u.({n}_update))")
                 
             pairs_str = (";\n" + "               ").join(pairs)
@@ -387,7 +401,7 @@ class RocqGenerator:
             for name in reg_flops:
                 lines.append(f"          {name}_v <- sfind {name} state;")
             for mod_type, inst_name in self.data.instances:
-                mod_type_cap = mod_type.capitalize()
+                mod_type_cap = self._to_coq_module_name(mod_type)
                 lines.append(f"          {inst_name}_s <- sfind {inst_name} state;")
                 lines.append(f"          {inst_name}_v <- from_state (A := {mod_type_cap}.Flops) {inst_name}_s;")
                 
@@ -424,7 +438,7 @@ class RocqGenerator:
         lines.append("    Definition etrs (eid: vid): trsOk MTrs :=")
         lines.append("    match eid with")
         for mod_type, inst_name in self.data.instances:
-            mod_type_cap = mod_type.capitalize()
+            mod_type_cap = self._to_coq_module_name(mod_type)
             lines.append(f"    | {inst_name} => Sret ({mod_type_cap}.mtrs : MTrs)")
         lines.append("    | _ => Fail TrsUndeclared")
         lines.append("    end.")
