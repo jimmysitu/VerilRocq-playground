@@ -11,7 +11,7 @@ SV2ROCQ_TOOL=../../tools/verilog2rocq.py --prefix Verification.VerilogArithmetic
 MODULES_DIR=../../modules/verilog_arithmetic_module
 
 
-verilog2rocq:
+verilog2rocq: rca cla
 	# Half Adder
 	$(SV2ROCQ_TOOL) $(MODULES_DIR)/Adder/00_HA/src/rtl/ha.v Adder/HA/ha_gen.v
 	
@@ -21,14 +21,10 @@ verilog2rocq:
 rca:	
 	# Ripple Carry Adder
 	$(SV2ROCQ_TOOL) $(MODULES_DIR)/Adder/02_RCA/src/rtl Adder/RCA
-	
-#	# Carry Look-Ahead Adder
-#	$(SV2ROCQ_TOOL) $(MODULES_DIR)/Adder/03_CLA/src/rtl/fa.v Adder/CLA/fa_gen.v
-#	$(SV2ROCQ_TOOL) $(MODULES_DIR)/Adder/03_CLA/src/rtl/cla_04.v Adder/CLA/cla_04_gen.v
-#	$(SV2ROCQ_TOOL) $(MODULES_DIR)/Adder/03_CLA/src/rtl/cla_08.v Adder/CLA/cla_08_gen.v
-#	$(SV2ROCQ_TOOL) $(MODULES_DIR)/Adder/03_CLA/src/rtl/cla_16.v Adder/CLA/cla_16_gen.v
-#	$(SV2ROCQ_TOOL) $(MODULES_DIR)/Adder/03_CLA/src/rtl/cla_32.v Adder/CLA/cla_32_gen.v
 
+cla:	
+	# Carry Look-Ahead Adder
+	$(SV2ROCQ_TOOL) $(MODULES_DIR)/Adder/03_CLA/src/rtl Adder/CLA
 
 clean:
 	if [ -f Makefile.coq ]; then $(MAKE) -f Makefile.coq clean; fi

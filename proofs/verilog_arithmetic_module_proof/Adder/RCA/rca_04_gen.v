@@ -6,7 +6,7 @@ Require Import common.Common.
 Require Import Verification.VerilogArithmeticModule.Adder.RCA.common_gen.
 
 Require Import Verification.VerilogArithmeticModule.Adder.RCA.fa_gen.
-Require Import Verification.VerilogArithmeticModule.Adder.RCA.fa_proof.
+Require Import Verification.VerilogArithmeticModule.Adder.RCA.fa_trs.
 
 #[local] Existing Instance Fa.inputs_structured.
 #[local] Existing Instance Fa.flops_structured.

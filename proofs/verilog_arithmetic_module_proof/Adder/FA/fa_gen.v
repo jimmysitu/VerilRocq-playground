@@ -14,14 +14,14 @@ Module Fa.
   | sum
   .
   
-  Definition VExprIdVId := @VExprId vid.
-  Coercion VExprIdVId: vid >-> VExpr.
-  Definition VPortIdsOneVId := @VPortIdsOne vid.
-  Coercion VPortIdsOneVId: vid >-> VPortIds.
+  Definition VExprIdVid := @VExprId vid.
+  Coercion VExprIdVid: vid >-> VExpr.
+  Definition VPortIdsOneVid := @VPortIdsOne vid.
+  Coercion VPortIdsOneVid: vid >-> VPortIds.
 
-  Definition vid_eq_dec: forall (v1 v2: vid), {v1 = v2} + {v1 <> v2} := ltac:(decide equality).
-  #[local] Instance vid_t_c_impl : vid_t_c := { vid_t := vid }.
-  #[local] Instance vid_ops_impl : vid_ops := { vid_eq_dec := vid_eq_dec }.
+  Definition vid_vid_eq_dec: forall (v1 v2: vid), {v1 = v2} + {v1 <> v2} := ltac:(decide equality).
+  #[export] Instance vid_t_c_impl : vid_t_c := {| vid_t := vid |}.
+  #[export] Instance vid_ops_impl : vid_ops := {| vid_eq_dec := vid_vid_eq_dec |}.
 
 
   Module M.

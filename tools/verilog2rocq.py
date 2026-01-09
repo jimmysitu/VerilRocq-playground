@@ -177,10 +177,13 @@ class RocqGenerator:
             lines.append("")
             for mod in unique_mods:
                 if mod.lower() != self.mod_name.lower(): # avoid self-import
-                    import_path = f"{logical_dir}.{mod}_gen" if logical_dir else f"{mod}_gen"
+                    import_path_gen = f"{logical_dir}.{mod}_gen" if logical_dir else f"{mod}_gen"
+                    import_path_trs = f"{logical_dir}.{mod}_trs" if logical_dir else f"{mod}_trs"
                     if self.logical_prefix:
-                        import_path = f"{self.logical_prefix}.{import_path}"
-                    lines.append(f"Require Import {import_path}.")
+                        import_path_gen = f"{self.logical_prefix}.{import_path_gen}"
+                        import_path_trs = f"{self.logical_prefix}.{import_path_trs}"
+                    lines.append(f"Require Import {import_path_gen}.")
+                    lines.append(f"Require Import {import_path_trs}.")
         
         lines.append("")
 
@@ -206,10 +209,10 @@ class RocqGenerator:
                     lines.append(f"  | {ident}")
             lines.append("  .")
             lines.append("  ")
-            lines.append("  Definition VExprIdVId := @VExprId vid.")
-            lines.append("  Coercion VExprIdVId: vid >-> VExpr.")
-            lines.append("  Definition VPortIdsOneVId := @VPortIdsOne vid.")
-            lines.append("  Coercion VPortIdsOneVId: vid >-> VPortIds.")
+            lines.append("  Definition VExprIdVid := @VExprId vid.")
+            lines.append("  Coercion VExprIdVid: vid >-> VExpr.")
+            lines.append("  Definition VPortIdsOneVid := @VPortIdsOne vid.")
+            lines.append("  Coercion VPortIdsOneVid: vid >-> VPortIds.")
             lines.append("")
             lines.append("  Definition vid_vid_eq_dec: forall (v1 v2: vid), {v1 = v2} + {v1 <> v2} := ltac:(decide equality).")
             lines.append("  #[export] Instance vid_t_c_impl : vid_t_c := {| vid_t := vid |}.")
@@ -439,7 +442,7 @@ class RocqGenerator:
         lines.append("    match eid with")
         for mod_type, inst_name in self.data.instances:
             mod_type_cap = self._to_coq_module_name(mod_type)
-            lines.append(f"    | {inst_name} => Sret ({mod_type_cap}.mtrs : MTrs)")
+            lines.append(f"    | {inst_name} => Sret ({mod_type_cap}Trs.mtrs : MTrs)")
         lines.append("    | _ => Fail TrsUndeclared")
         lines.append("    end.")
         lines.append("")

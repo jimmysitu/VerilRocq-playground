@@ -6,6 +6,7 @@ Require Import common.Common.
 Require Import Verification.VerilogArithmeticModule.Adder.RCA.common_gen.
 
 Require Import Verification.VerilogArithmeticModule.Adder.RCA.rca_04_gen.
+Require Import Verification.VerilogArithmeticModule.Adder.RCA.rca_04_trs.
 
 #[local] Existing Instance Rca_04.inputs_structured.
 #[local] Existing Instance Rca_04.flops_structured.
@@ -212,8 +213,8 @@ endmodule
 
     Definition etrs (eid: vid): trsOk MTrs :=
     match eid with
-    | low_4bit => Sret (Rca_04.mtrs : MTrs)
-    | high_4bit => Sret (Rca_04.mtrs : MTrs)
+    | low_4bit => Sret (Rca_04Trs.mtrs : MTrs)
+    | high_4bit => Sret (Rca_04Trs.mtrs : MTrs)
     | _ => Fail TrsUndeclared
     end.
 
