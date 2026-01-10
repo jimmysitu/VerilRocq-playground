@@ -27,7 +27,9 @@ Module Rca_04Trs.
   
     Import ListNotations.
     Import HMapNotations.
-  
+
+    #[local] Transparent FaTrs.trs_structured.
+    Compute M.m.
     Definition trs_structured_sigT: {trs: forall (inputs: Inputs) (flops: Flops), (Updates * Outputs) |
       is_module_trs M.m fmapEmpty etrs Inputs Flops (to_unstructured_trs update_to_state output_to_state trs)
     }.
@@ -38,14 +40,14 @@ Module Rca_04Trs.
       clear Hsz_ops SZ_OPS ARRAY_OPS Harray_ops.
 
       unshelve epose (trs := _ : Inputs -> Flops -> Updates * Outputs).
-      { intros i f. destruct i, f. split; econstructor; eapply _. }
+      { intros i f. destruct i, f. split; econstructor; shelve. }
       exists trs.
       red. unfold to_unstructured_trs. intros ???? Htrs. unfold format.
       destruct (from_state inputs) as [[]|], (from_state flops) as [[]|] in *;
       vm_compute in Htrs; injection Htrs as <- <-.
       2-4: eauto.
       eexists. split; [split|].
-      - eapply trsM_iff_rep_is_chain with (n := 3%nat).
+      - eapply trsM_iff_rep_is_chain with (n := 10%nat).
         cbv.
         reflexivity.
       - cbv. reflexivity.
