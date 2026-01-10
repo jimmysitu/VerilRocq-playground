@@ -204,6 +204,7 @@ endmodule
   }.
 
   Record Flops := {
+    src2_reg_v: SZ;
     fa_00_v: Fa.Flops;
     fa_01_v: Fa.Flops;
     fa_02_v: Fa.Flops;
@@ -211,6 +212,7 @@ endmodule
   }.
 
   Record Updates := {
+    src2_reg_update: State;
     fa_00_update: Fa.Updates;
     fa_01_update: Fa.Updates;
     fa_02_update: Fa.Updates;
@@ -249,7 +251,8 @@ endmodule
                (carry_out, HMapBits o.(carry_out_v))].
 
     Definition update_to_state (u: Updates): State :=
-      HMapStr [(fa_00, Fa.update_to_state u.(fa_00_update));
+      HMapStr [(src2_reg, u.(src2_reg_update));
+               (fa_00, Fa.update_to_state u.(fa_00_update));
                (fa_01, Fa.update_to_state u.(fa_01_update));
                (fa_02, Fa.update_to_state u.(fa_02_update));
                (fa_03, Fa.update_to_state u.(fa_03_update))].
@@ -257,6 +260,7 @@ endmodule
     #[export] Instance flops_structured: StructuredState Flops := {
       from_state :=
         fun (state : State) =>
+          src2_reg_v <- sfind src2_reg state;
           fa_00_s <- sfind fa_00 state;
           fa_00_v <- from_state (A := Fa.Flops) fa_00_s;
           fa_01_s <- sfind fa_01 state;
@@ -266,6 +270,7 @@ endmodule
           fa_03_s <- sfind fa_03 state;
           fa_03_v <- from_state (A := Fa.Flops) fa_03_s;
           Sret {|
+            src2_reg_v := hbits src2_reg_v;
             fa_00_v := fa_00_v;
             fa_01_v := fa_01_v;
             fa_02_v := fa_02_v;
@@ -273,11 +278,13 @@ endmodule
           |};
       to_state := fun f =>
         match f with
-        | {| fa_00_v := fa_00_v;
+        | {| src2_reg_v := src2_reg_v;
+             fa_00_v := fa_00_v;
              fa_01_v := fa_01_v;
              fa_02_v := fa_02_v;
              fa_03_v := fa_03_v |} =>
-          HMapStr [(fa_00, to_state fa_00_v);
+          HMapStr [(src2_reg, HMapBits src2_reg_v);
+                   (fa_00, to_state fa_00_v);
                    (fa_01, to_state fa_01_v);
                    (fa_02, to_state fa_02_v);
                    (fa_03, to_state fa_03_v)]

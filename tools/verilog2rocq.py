@@ -74,6 +74,10 @@ class VerilogDataCollector:
         elif isinstance(node, Reg):
             self.regs[node.name] = node.width
             self.identifiers.add(node.name)
+            # Treat every reg declaration as a flop so that it appears in the
+            # generated Flops/Updates records, even if it only uses blocking
+            # assignments (e.g. combinational always blocks).
+            self.flops.add(node.name)
             
         elif isinstance(node, Wire):
             self.wires[node.name] = node.width
