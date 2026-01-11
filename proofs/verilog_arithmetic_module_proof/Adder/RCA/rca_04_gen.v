@@ -256,21 +256,29 @@ endmodule
                (carry_out, HMapBits o.(carry_out_v))].
 
     Definition update_to_state (u: Updates): State :=
+      hupds (hsingle_opt fa_00 (Fa.update_to_state u.(fa_00_update)))
+      (hupds (hsingle_opt fa_01 (Fa.update_to_state u.(fa_01_update)))
+      (hupds (hsingle_opt fa_02 (Fa.update_to_state u.(fa_02_update)))
+      (      (hsingle_opt fa_03 (Fa.update_to_state u.(fa_03_update))))))
+      .
+
+    (*
       HMapStr [(fa_00, Fa.update_to_state u.(fa_00_update));
                (fa_01, Fa.update_to_state u.(fa_01_update));
                (fa_02, Fa.update_to_state u.(fa_02_update));
                (fa_03, Fa.update_to_state u.(fa_03_update))].
+    *)
 
     #[export] Instance flops_structured: StructuredState Flops := {
       from_state :=
         fun (state : State) =>
-          fa_00_s <- sfind fa_00 state;
+          fa_00_s <- sfind fa_00 state <~ HMapEmpty;
           fa_00_v <- from_state (A := Fa.Flops) fa_00_s;
-          fa_01_s <- sfind fa_01 state;
+          fa_01_s <- sfind fa_01 state <~ HMapEmpty;
           fa_01_v <- from_state (A := Fa.Flops) fa_01_s;
-          fa_02_s <- sfind fa_02 state;
+          fa_02_s <- sfind fa_02 state <~ HMapEmpty;
           fa_02_v <- from_state (A := Fa.Flops) fa_02_s;
-          fa_03_s <- sfind fa_03 state;
+          fa_03_s <- sfind fa_03 state <~ HMapEmpty;
           fa_03_v <- from_state (A := Fa.Flops) fa_03_s;
           Sret {|
             fa_00_v := fa_00_v;
@@ -284,10 +292,16 @@ endmodule
              fa_01_v := fa_01_v;
              fa_02_v := fa_02_v;
              fa_03_v := fa_03_v |} =>
+          hupds (hsingle_opt fa_00 (to_state  fa_00_v))
+          (hupds (hsingle_opt fa_01 (to_state fa_01_v))
+          (hupds (hsingle_opt fa_02 (to_state fa_02_v))
+                 (hsingle_opt fa_03 (to_state fa_03_v))))
+        (*
           HMapStr [(fa_00, to_state fa_00_v);
                    (fa_01, to_state fa_01_v);
                    (fa_02, to_state fa_02_v);
                    (fa_03, to_state fa_03_v)]
+        *)
         end
     }.
 
