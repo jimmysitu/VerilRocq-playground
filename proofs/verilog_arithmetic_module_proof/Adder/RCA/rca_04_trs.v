@@ -60,7 +60,7 @@ Module Rca_04Trs.
       - (* update proof *)
         cbv. reflexivity.
       - (* output proof *)
-        vm_compute. reflexivity.
+        cbv. reflexivity.
       all: cbv; reflexivity.
     Defined.
   

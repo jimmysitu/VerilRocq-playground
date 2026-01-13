@@ -21,7 +21,7 @@ Import SFMonadNotations.
 
 Module FaTrs.
   Section AbsOps.
-    Context `{sz_ops} `{array_ops hmap}.
+    Context `{SZ_OPS: sz_ops} `{ARRAY_OPS: array_ops hmap}.
   
     Import ListNotations.
     Import HMapNotations.
@@ -30,6 +30,12 @@ Module FaTrs.
       is_module_trs M.m fmapEmpty etrs Inputs Flops (to_unstructured_trs update_to_state output_to_state trs)
     }.
     Proof.
+      (* Force instantiation to eliminate abstract symbols *)
+      destruct SZ_OPS eqn: Hsz_ops, ARRAY_OPS eqn: Harray_ops.
+      match (type of Hsz_ops) with | SZ_OPS = ?a => set (SZ_OPS' := a) end.
+      match (type of Harray_ops) with | ARRAY_OPS = ?a => set (ARRAY_OPS' := a) end.
+      clear Hsz_ops SZ_OPS ARRAY_OPS Harray_ops.
+
       unshelve epose (trs := _ : Inputs -> Flops -> Updates * Outputs).
       { intros i f. destruct i, f. split; econstructor; eapply _. }
       exists trs.

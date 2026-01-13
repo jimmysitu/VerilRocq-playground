@@ -256,10 +256,10 @@ endmodule
                (carry_out, HMapBits o.(carry_out_v))].
 
     Definition update_to_state (u: Updates): State :=
-      hupds (hsimple fa_00 (Fa.update_to_state u.(fa_00_update)))
-      (hupds (hsimple fa_01 (Fa.update_to_state u.(fa_01_update)))
-      (hupds (hsimple fa_02 (Fa.update_to_state u.(fa_02_update)))
-             (hsimple fa_03 (Fa.update_to_state u.(fa_03_update)))))
+      hupds (hsimple fa_00 (Fa.update_to_state u.(fa_00_update))) (
+      hupds (hsimple fa_01 (Fa.update_to_state u.(fa_01_update))) (
+      hupds (hsimple fa_02 (Fa.update_to_state u.(fa_02_update))) (
+            (hsimple fa_03 (Fa.update_to_state u.(fa_03_update))) )))
       .
 
     (*
@@ -292,10 +292,10 @@ endmodule
              fa_01_v := fa_01_v;
              fa_02_v := fa_02_v;
              fa_03_v := fa_03_v |} =>
-          hupds (hsimple fa_00 (to_state  fa_00_v))
-          (hupds (hsimple fa_01 (to_state fa_01_v))
-          (hupds (hsimple fa_02 (to_state fa_02_v))
-                 (hsimple fa_03 (to_state fa_03_v))))
+          hupds (hsimple fa_00 (to_state fa_00_v)) (
+          hupds (hsimple fa_01 (to_state fa_01_v)) (
+          hupds (hsimple fa_02 (to_state fa_02_v)) (
+                (hsimple fa_03 (to_state fa_03_v)) )))
         (*
           HMapStr [(fa_00, to_state fa_00_v);
                    (fa_01, to_state fa_01_v);
