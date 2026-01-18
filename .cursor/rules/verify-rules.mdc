@@ -1,0 +1,21 @@
+---
+alwaysApply: true
+---
+
+- VerilRocq source code is in the `VerilRocq` directory.
+  - The Coq project file is `VerilRocq/_CoqProject`.
+  - VerilRocq is a Coq library for verifying Verilog code.
+  - Makefile is in `VerilRocq/Makefile`. 
+    - `make all` will build the whole Coq project.
+    - `make clean` will clean the wholeCoq project.
+  - The source code is in the `VerilRocq/src` directory.
+    - The Coq files are in the `VerilRocq/src/*.v` files.
+    - The Coq Makefile is in the `VerilRocq/src/Makefile`.
+    - `make all` will build the source code.
+    - `make clean` will clean the build.
+    - `make debug FILE=path/to/file.v`, use awk to print the error message and the Coq context.
+    - `make compile FILE=path/to/file.v`, compile the given Coq file to .vo. It is only used for re-compiling, so other Rocq files can import the updated .vo.
+  - The dependencies are in the `VerilRocq/dep` directory.
+- VerilRocq-playground source code is in the `VerilRocq-playground` directory.
+  - The Coq project file is `VerilRocq-playground/_CoqProject`.
+  - VerilRocq-playground is a Coq project for verifying the VerilRocq library.
