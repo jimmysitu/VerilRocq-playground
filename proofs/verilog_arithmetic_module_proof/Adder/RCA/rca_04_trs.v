@@ -29,6 +29,8 @@ Module Rca_04Trs.
     Import HMapNotations.
 
     #[local] Transparent FaTrs.trs_structured.
+    #[local] Transparent FaTrs.mtrs.
+
     Definition trs_structured_sigT: {trs: forall (inputs: Inputs) (flops: Flops), (Updates * Outputs) |
       is_module_trs M.m fmapEmpty etrs Inputs Flops (to_unstructured_trs update_to_state output_to_state trs)
     }.
@@ -54,13 +56,13 @@ Module Rca_04Trs.
       eexists. split; [split|].
 
       - (* chain proof *)
-        eapply trsM_iff_rep_is_chain with (n := 10%nat).
-        cbv.
+        eapply trsM_iff_rep_is_chain with (n := 8%nat).
+        vm_compute.
         reflexivity.
       - (* update proof *)
         cbv. reflexivity.
       - (* output proof *)
-        cbv. reflexivity.
+        vm_compute. reflexivity.
       all: cbv; reflexivity.
     Defined.
   
