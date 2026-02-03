@@ -305,7 +305,7 @@ endmodule
         end
     }.
 
-    (* Etrs should include the submodule name and  their mtrs *)
+    (* Etrs should include the submodule name and their mtrs *)
     Definition etrs (eid: vid): trsOk MTrs :=
     match eid with
     | fa => Sret (FaTrs.mtrs : MTrs)

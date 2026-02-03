@@ -56,8 +56,8 @@ Module Rca_04Trs.
       eexists. split; [split|].
 
       - (* chain proof *)
-        eapply trsM_iff_rep_is_chain with (n := 8%nat).
-        vm_compute.
+        eapply trsM_iff_rep_is_chain with (n := 2%nat).
+        cbv.
         reflexivity.
       - (* update proof *)
         cbv. reflexivity.
