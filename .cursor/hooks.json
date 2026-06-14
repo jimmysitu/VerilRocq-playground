@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "workspaceOpen": [
+      {
+        "command": ".cursor/hooks/load-rocq-plugin.sh",
+        "timeout": 60
+      }
+    ]
+  }
+}

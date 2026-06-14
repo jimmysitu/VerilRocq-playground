@@ -4,3 +4,6 @@
 [submodule "VerilRocq"]
 	path = VerilRocq
 	url = ../VerilRocq.git
+[submodule "rocq-skills"]
+	path = rocq-skills
+	url = ../rocq-skills
